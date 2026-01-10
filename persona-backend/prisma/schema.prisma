@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  brainDumps BrainDump[]
+}
+
+model BrainDump {
+  id             String          @id @default(uuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id])
+  rawText        String
+  createdAt      DateTime        @default(now())
+  processed      Boolean         @default(false)
+  aiSummary      String?
+  extractedItems ExtractedItem[]
+}
+
+model ExtractedItem {
+  id              String    @id @default(uuid())
+  brainDumpId     String
+  brainDump       BrainDump @relation(fields: [brainDumpId], references: [id])
+  type            String    // "task" | "habit" | "goal" | "note"
+  title           String
+  description     String?
+  confidenceScore Float?
+  status          String?   // "pending" | "completed" (only for tasks)
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+}

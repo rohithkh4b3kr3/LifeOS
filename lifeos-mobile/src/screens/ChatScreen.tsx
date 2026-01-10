@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,38 +9,52 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { startSpeechToText } from "../services/voice";
 
-const ChatScreen = () => {
+import { startSpeechToText } from "../services/voice";
+import { apiFetch } from "../services/api";
+
+export default function ChatScreen() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
 
   const handleSend = async () => {
     if (!input.trim()) {
-      Alert.alert("Say something", "What’s on your mind today?");
+      Alert.alert("Say something", "What's on your mind today?");
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/ai/memory", {
+      // Step 1: Parse the memory
+      const parseData = await apiFetch("/api/ai/memory", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: input }),
       });
 
-      const data = await res.json();
+      if (!parseData.tasks || parseData.tasks.length === 0) {
+        Alert.alert("Nothing to organize", "Try adding more details");
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Bulk create tasks (user confirmed by pressing button)
+      await apiFetch("/api/tasks/bulk-create", {
+        method: "POST",
+        body: JSON.stringify({ tasks: parseData.tasks }),
+      });
 
       Alert.alert(
-        "I’ve organized this for you",
-        `${data.tasks.length} things sorted`
+        "I've organized this for you",
+        `${parseData.tasks.length} things sorted`
       );
 
       setInput("");
-    } catch {
-      Alert.alert("Error", "Could not organize this right now");
+    } catch (err: any) {
+      console.error("ChatScreen error:", err);
+      const errorMessage = err?.message || "Could not organize this right now";
+      Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -50,9 +64,14 @@ const ChatScreen = () => {
     try {
       setListening(true);
       const text = await startSpeechToText();
-      setInput(text);
-    } catch {
-      Alert.alert("Voice error", "Could not hear clearly");
+
+      if (text && text.trim()) {
+        setInput(text);
+      }
+    } catch (err: any) {
+      console.error("Voice error:", err);
+      const errorMessage = err?.message || "Could not hear clearly. Try typing instead.";
+      Alert.alert("Voice error", errorMessage);
     } finally {
       setListening(false);
     }
@@ -78,6 +97,7 @@ const ChatScreen = () => {
         <TouchableOpacity
           style={styles.voiceButton}
           onPress={handleVoice}
+          disabled={listening}
         >
           <Text style={styles.voiceText}>
             {listening ? "Listening…" : "Speak"}
@@ -85,7 +105,7 @@ const ChatScreen = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.sendButton}
+          style={[styles.sendButton, loading && styles.disabled]}
           onPress={handleSend}
           disabled={loading}
         >
@@ -96,7 +116,7 @@ const ChatScreen = () => {
       </View>
     </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -132,11 +152,15 @@ const styles = StyleSheet.create({
   voiceText: {
     fontSize: 16,
     color: "#555",
+    textAlign: "center",
   },
   sendButton: {
     backgroundColor: "#111",
     paddingVertical: 16,
     borderRadius: 12,
+  },
+  disabled: {
+    opacity: 0.6,
   },
   sendText: {
     color: "#fff",
@@ -145,5 +169,3 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
-
-export default ChatScreen;

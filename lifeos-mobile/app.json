@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "lifeOS",
+    "slug": "lifeOs",
+    "version": "1.0.0",
+    "newArchEnabled": false,
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
