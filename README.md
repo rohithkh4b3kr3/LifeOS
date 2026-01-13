@@ -17,6 +17,7 @@ LifeOS flips that.
 
 You can:
 - Dump messy thoughts
+- organise daily tasks
 - Speak naturally
 - Write unstructured plans
 
