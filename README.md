@@ -174,11 +174,9 @@ Better habit intelligence
 
 Smarter reminders
 
-Offline-first support
+Offline-first supportApp
 
-## 👤 Built By
 
-Keni
 Learning in public.
 Building slowly.
 Optimizing for usefulness — not hype.
@@ -186,3 +184,4 @@ Optimizing for usefulness — not hype.
 📜 License
 
 MIT — use it, fork it, improve it.
+
